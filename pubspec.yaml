@@ -35,6 +35,8 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
   get: ^4.6.5
+  indexed: ^0.0.8
+  dotted_border: ^2.0.0+2
 
 dev_dependencies:
   flutter_test:
