@@ -38,6 +38,7 @@ dependencies:
   indexed: ^0.0.8
   dotted_border: ^2.0.0+2
   dotted_decoration: ^2.0.0
+  delayed_display: ^2.0.0
 
 dev_dependencies:
   flutter_test:
