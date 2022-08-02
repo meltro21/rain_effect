@@ -17,17 +17,18 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(),
+      home: MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({
+  MyHomePage({
     Key? key,
   }) : super(key: key);
 
@@ -38,128 +39,142 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage>
     with SingleTickerProviderStateMixin {
   late AnimationController controller;
-
-  late List<Animation<double>> slideAnimateList = [];
-  late List<Animation<double>> slideAnimateListBack = [];
-
-  late List<Animation<double>> animateDropOpacityList = [];
-  late List<Animation<double>> animateDropOpacityListBack = [];
-
-  late List<Animation<double>> hideDropList = [];
-  late List<Animation<double>> hideDropListBack = [];
-
-  late List<Animation<double>> animateScaleList = [];
-  late List<Animation<double>> animateScaleListBack = [];
-
-  var count = 10;
-  List<double> pos1 = [];
+  var posFromLeftInt = 10;
+  List<double> posFromLeftList = [];
   List<double> slideRandomList = [];
   var uniformDistribution = 0;
   var rng;
   var length = 70;
 
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    controller =
-        AnimationController(duration: const Duration(seconds: 10), vsync: this);
+  //Animaiton variables
+  //rain front row
+  late List<Animation<double>> slideAnimationListFrontRow = [];
+  late List<Animation<double>> splatOpacityListFrontRow = [];
+  late List<Animation<double>> dropOpacityListFrontRow = [];
+  late List<Animation<double>> hideDropListFrontRow = [];
+  late List<Animation<double>> splatScaleListFrontRow = [];
+
+  //rain back row
+  late List<Animation<double>> slideAnimationListBackRow = [];
+  late List<Animation<double>> splatOpacityListBackRow = [];
+  late List<Animation<double>> dropOpacityListBackRow = [];
+  late List<Animation<double>> hideDropListBackRow = [];
+  late List<Animation<double>> splatScaleListBackRow = [];
+
+  Future<void> myRain(double mediaHeight, double mediaWidth) async {
     var startDrop = 0.0;
 
+    //the loop will create animaiton for each drop
     for (var i = 0; i < length; i++) {
       rng = Random();
 
-      // if (i % 10 == 0) {
-      //   uniformDistribution += 2;
-      // }
-      //var num = rng.nextInt(7) + uniformDistribution;
-      print(startDrop);
+      //interval for drop and it's splat
       startDrop += 0.01;
-      var endDrop = startDrop + 0.05;
+      var endDrop = startDrop + 0.04;
       var startSplat = endDrop;
-      var endSplat = endDrop + 0.03;
+      var endSplat = endDrop + 0.04;
 
-      int slideRandom = rng.nextInt(30);
-      var a = slideRandom.toDouble();
-      count = rng.nextInt(300) + 10;
-      double myNum = count.toDouble();
-      //print(myNum);
-      pos1.add(myNum);
-      slideRandomList.add(a);
+      //to make drops end at different levels otherwise
+      // all drop will be on the same level
+      int slideRandomInt = rng.nextInt(30);
+      var slideRandomDouble = slideRandomInt.toDouble();
 
-      var slideAnimate =
-          Tween<double>(begin: 0, end: 290 + a).animate(CurvedAnimation(
+      //to make drop appear at different positoins.
+      //pick random number from screen width and assign that position
+      posFromLeftInt = rng.nextInt(mediaWidth.toInt()) + 10;
+      double posFromLeftDouble = posFromLeftInt.toDouble();
+      //print(posFromLeftDouble);
+      posFromLeftList.add(posFromLeftDouble);
+      slideRandomList.add(slideRandomDouble);
+
+      //front Row
+      var slideAnimationFrontRow = Tween<double>(
+              begin: 0, end: (mediaHeight - (50 + 35)) + slideRandomDouble)
+          .animate(CurvedAnimation(
               parent: controller,
               curve: Interval(
                 startDrop,
                 endDrop,
               )));
-      slideAnimateList.add(slideAnimate);
+      slideAnimationListFrontRow.add(slideAnimationFrontRow);
 
-      var slideAnimateBack =
-          Tween<double>(begin: 0, end: 290 - a).animate(CurvedAnimation(
+      var dropOpacityFrontRow = Tween<double>(begin: 0, end: 1).animate(
+          CurvedAnimation(
+              parent: controller, curve: Interval(startDrop, startDrop)));
+      dropOpacityListFrontRow.add(dropOpacityFrontRow);
+
+      var splatOpacityFrontRow = Tween<double>(begin: 1, end: 0).animate(
+          CurvedAnimation(
+              parent: controller, curve: Interval(startSplat, endSplat)));
+      splatOpacityListFrontRow.add(splatOpacityFrontRow);
+
+      var hideDropFrontRow = Tween<double>(begin: 1, end: 0).animate(
+          CurvedAnimation(
+              parent: controller, curve: Interval(endDrop, endDrop)));
+      hideDropListFrontRow.add(hideDropFrontRow);
+
+      var splatScaleFrontRow = Tween<double>(begin: 0, end: 1).animate(
+          CurvedAnimation(
+              parent: controller, curve: Interval(startSplat, endSplat)));
+      splatScaleListFrontRow.add(splatScaleFrontRow);
+
+      //back row
+      var slideAnimateBack = Tween<double>(
+              begin: 0, end: (mediaHeight - (50 + 35)) - slideRandomDouble)
+          .animate(CurvedAnimation(
               parent: controller,
               curve: Interval(
-                startDrop + (a / 200),
-                endDrop + (a / 200),
+                startDrop + (slideRandomDouble / 200),
+                endDrop + (slideRandomDouble / 200),
               )));
-      slideAnimateListBack.add(slideAnimateBack);
+      slideAnimationListBackRow.add(slideAnimateBack);
 
-      //for front drop
-      var animateDropOpacity = Tween<double>(begin: 1, end: 0).animate(
-          CurvedAnimation(
-              parent: controller, curve: Interval(startSplat, endSplat)));
-      animateDropOpacityList.add(animateDropOpacity);
-      //for back drop
-      var animateDropOpacityBack = Tween<double>(begin: 1, end: 0).animate(
+      var dropOpacityBackRow = Tween<double>(begin: 0, end: 1).animate(
           CurvedAnimation(
               parent: controller,
-              curve: Interval(
-                  (endDrop + (a / 200)), (endDrop + (a / 200) + 0.03))));
-      animateDropOpacityListBack.add(animateDropOpacityBack);
+              curve: Interval(startDrop + (slideRandomDouble / 200),
+                  startDrop + (slideRandomDouble / 200))));
+      dropOpacityListBackRow.add(dropOpacityBackRow);
 
-      //for front
-      var hideDrop = Tween<double>(begin: 1, end: 0).animate(CurvedAnimation(
-          parent: controller, curve: Interval(endDrop, endDrop)));
-      hideDropList.add(hideDrop);
-      //for back
-      var hideDropBack = Tween<double>(begin: 0.5, end: 0).animate(
+      var splatOpacityBackRow = Tween<double>(begin: 1, end: 0).animate(
           CurvedAnimation(
               parent: controller,
-              curve: Interval(endDrop + (a / 200), endDrop + (a / 200))));
-      hideDropListBack.add(hideDropBack);
+              curve: Interval((endDrop + (slideRandomDouble / 200)),
+                  (endDrop + (slideRandomDouble / 200) + 0.03))));
+      splatOpacityListBackRow.add(splatOpacityBackRow);
 
-      //for front
-      var animateScale = Tween<double>(begin: 0, end: 1).animate(
-          CurvedAnimation(
-              parent: controller, curve: Interval(startSplat, endSplat)));
-      animateScaleList.add(animateScale);
-      //for back
-      var animateScaleBack = Tween<double>(begin: 0, end: 1).animate(
+      var hideDropBackRow = Tween<double>(begin: 0.5, end: 0).animate(
           CurvedAnimation(
               parent: controller,
-              curve: Interval(
-                  (endDrop) + (a / 200), (endSplat + (a / 200) + 0.03))));
-      animateScaleListBack.add(animateScaleBack);
+              curve: Interval(endDrop + (slideRandomDouble / 200),
+                  endDrop + (slideRandomDouble / 200))));
+      hideDropListBackRow.add(hideDropBackRow);
+
+      var splatScaleBackRow = Tween<double>(begin: 0, end: 1).animate(
+          CurvedAnimation(
+              parent: controller,
+              curve: Interval((endDrop) + (slideRandomDouble / 200),
+                  (endSplat + (slideRandomDouble / 200) + 0.03))));
+      splatScaleListBackRow.add(splatScaleBackRow);
     }
     controller.addListener(() {
-      setState(() {
-        // if (controller.value > 0.6) {
-        // }
-        // controller.forward();
-      });
+      setState(() {});
     });
-    controller.addStatusListener((status) {
-      print('value of controller is ${controller.value}');
-      if (status == AnimationStatus.completed) {
-        //Future.delayed(Duration(microseconds: 200));
-        controller.repeat();
-        // setState(() {
-        //   show = false;
-        // });
-      }
-    });
+
     controller.forward();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    controller =
+        AnimationController(duration: const Duration(seconds: 20), vsync: this);
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -179,97 +194,107 @@ class _MyHomePageState extends State<MyHomePage>
         ),
         height: mediaHeight,
         width: mediaWidth,
-        child: Stack(children: [
-          // front row
-          for (int i = 0; i < length; i++)
-            Positioned(
-              left: pos1[i],
-              top: slideAnimateList[i].value,
-              child: Opacity(
-                opacity: hideDropList[i].value,
-                child: Container(
-                  height: 35,
-                  width: 2,
-                  decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Color.fromRGBO(255, 255, 255, 0),
-                      Color.fromRGBO(255, 255, 255, 0.25)
-                    ],
-                  )),
-                  child: Container(),
-                ),
-              ),
-            ),
-          for (int i = 0; i < length; i++)
-            Positioned(
-              left: pos1[i],
-              top: 330 + slideRandomList[i],
-              child: Transform.scale(
-                scale: animateScaleList[i].value,
-                child: Opacity(
-                  opacity: animateDropOpacityList[i].value,
-                  child: Container(
-                    decoration: DottedDecoration(
-                      shape: Shape.box,
-                      borderRadius: BorderRadius.circular(
-                          50), //remove this to get plane rectange
+        child: FutureBuilder(
+            future: myRain(mediaHeight, mediaWidth),
+            builder: (context, index) {
+              return Stack(children: [
+                for (int i = 0; i < length; i++)
+                  Positioned(
+                    left: posFromLeftList[i],
+                    top: slideAnimationListFrontRow[i].value,
+                    child: Opacity(
+                      opacity: dropOpacityListFrontRow[i].value,
+                      child: Opacity(
+                        opacity: hideDropListFrontRow[i].value,
+                        child: Container(
+                          height: 35,
+                          width: 2,
+                          decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Color.fromRGBO(255, 255, 255, 0),
+                              Color.fromRGBO(255, 255, 255, 0.25)
+                            ],
+                          )),
+                          child: Container(),
+                        ),
+                      ),
                     ),
-                    height: 15,
-                    width: 7,
                   ),
-                ),
-              ),
-            ),
+                for (int i = 0; i < length; i++)
+                  Positioned(
+                    left: posFromLeftList[i],
+                    top: (mediaHeight - 50) + slideRandomList[i],
+                    child: Transform.scale(
+                      scale: splatScaleListFrontRow[i].value,
+                      child: Opacity(
+                        opacity: splatOpacityListFrontRow[i].value,
+                        child: Container(
+                          decoration: DottedDecoration(
+                            color: Colors.white,
+                            shape: Shape.box,
+                            borderRadius: BorderRadius.circular(50),
+                          ),
+                          height: 15,
+                          width: 7,
+                        ),
+                      ),
+                    ),
+                  ),
 
-          //back row
-          for (int i = 0; i < length; i++)
-            Positioned(
-              left: pos1[i] - 20,
-              top: slideAnimateListBack[i].value,
-              child: Opacity(
-                opacity: hideDropListBack[i].value,
-                child: Container(
-                  height: 35,
-                  width: 2,
-                  decoration: BoxDecoration(
-                    //color: Colors.red
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Color.fromRGBO(255, 255, 255, 0),
-                        Color.fromRGBO(255, 255, 255, 0.25)
-                      ],
+                //back row
+                for (int i = 0; i < length; i++)
+                  Positioned(
+                    left: posFromLeftList[i] - 20,
+                    top: slideAnimationListBackRow[i].value,
+                    child: Opacity(
+                      opacity: dropOpacityListBackRow[i].value,
+                      child: Opacity(
+                        opacity: hideDropListBackRow[i].value,
+                        child: Container(
+                          height: 35,
+                          width: 2,
+                          decoration: BoxDecoration(
+                            //color: Colors.red
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Color.fromRGBO(255, 255, 255, 0),
+                                Color.fromRGBO(255, 255, 255, 0.25)
+                              ],
+                            ),
+                          ),
+                          child: Container(),
+                        ),
+                      ),
                     ),
                   ),
-                  child: Container(),
-                ),
-              ),
-            ),
-          for (int i = 0; i < length; i++)
-            Positioned(
-              left: pos1[i] - 20,
-              top: 290 - slideRandomList[i] + 35,
-              child: Transform.scale(
-                scale: animateScaleListBack[i].value,
-                child: Opacity(
-                  opacity: animateDropOpacityListBack[i].value,
-                  child: Container(
-                    decoration: DottedDecoration(
-                      shape: Shape.box,
-                      borderRadius: BorderRadius.circular(
-                          50), //remove this to get plane rectange
+                for (int i = 0; i < length; i++)
+                  Positioned(
+                    left: posFromLeftList[i] - 20,
+                    top: (mediaHeight - 50) - slideRandomList[i] + 20,
+                    child: Transform.scale(
+                      scale: splatScaleListBackRow[i].value,
+                      child: Opacity(
+                        opacity: splatOpacityListBackRow[i].value,
+                        child: Container(
+                          decoration: DottedDecoration(
+                            color: Colors.white,
+                            shape: Shape.box,
+                            borderRadius: BorderRadius.circular(
+                                50), //remove this to get plane rectange
+                          ),
+                          height: 25,
+                          width: 7,
+                        ),
+                      ),
                     ),
-                    height: 25,
-                    width: 7,
-                  ),
-                ),
-              ),
-            )
-        ]),
+                  )
+              ]);
+            }),
       )),
     );
   }
